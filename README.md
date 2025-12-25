@@ -122,12 +122,4 @@ It is a competitive system-design game.
 
 ---
 
-## Prototype Goals
-
-This version exists to test:
-- Is the core loop understandable without explanation?
-- Do players feel responsible for losses?
-- Does replaying feel meaningful?
-
-If the answer to any of these is "no", rules must be **removed**, not expanded.
 
