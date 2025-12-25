@@ -82,6 +82,7 @@ When a tile is flipped due to a contest:
 
 - **No further contest checks are triggered by that flip**
 - Each turn may cause **at most one tile to change ownership**
+- A tile that is flipped due to a contest cannot be contested again on the immediately following turn.
 
 This prevents cascading flips and ensures every move has a single, stable outcome.
 
