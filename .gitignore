@@ -43,3 +43,7 @@ next-env.d.ts
 game-worker/node_modules
 game-worker/.env
 game-worker/.env*
+
+api/node_modules
+api/.env
+api/.env*
