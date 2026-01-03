@@ -3,6 +3,8 @@ import { Worker } from "bullmq";
 import { redis } from "./infra/redis";
 import { runMatchSimulation } from "./simulation/engine";
 import { MatchState } from "./repo/matchRepo";
+import { saveResult } from "./repo/resultRepo";
+import { persistFinalResult } from "./repo/finalResultRepo";
 
 /**
  * Idempotency rules:
@@ -24,12 +26,8 @@ import { MatchState } from "./repo/matchRepo";
 export function startMatchWorker(deps: {
   loadMatch: (id: string) => Promise<any>;
   updateMatchState: (id: string, state: MatchState) => Promise<boolean>;
-beforeSaveResult?: (matchId: string) => Promise<void>;
-saveResult: (
-  id: string,
-  result: unknown
-) => Promise<boolean>;
-
+  beforeSaveResult?: (matchId: string) => Promise<void>;
+  saveResult: (id: string, result: unknown) => Promise<boolean>;
 }) {
   return new Worker(
     "match-simulation",
@@ -37,11 +35,11 @@ saveResult: (
       const { matchId } = job.data;
 
       const match = await deps.loadMatch(matchId);
-if (!match) return;
+      if (!match) return;
 
-if (match.state === "FINISHED" || match.state === "FAILED") {
-  return;
-}
+      if (match.state === "FINISHED" || match.state === "FAILED") {
+        return;
+      }
 
       const didStart = await deps.updateMatchState(matchId, "RUNNING");
 
@@ -55,16 +53,22 @@ if (match.state === "FINISHED" || match.state === "FAILED") {
         seed: matchId,
       });
 
+
       await deps.saveResult(matchId, result);
 
       // only move to FINISHED if still RUNNING
       await deps.updateMatchState(matchId, "FINISHED");
       if (deps.beforeSaveResult) {
-  await deps.beforeSaveResult(matchId);
-}
+        await deps.beforeSaveResult(matchId);
+      }
 
-await deps.saveResult(matchId, result);
-await deps.updateMatchState(matchId, "FINISHED");
+      await deps.saveResult(matchId, result);
+      await deps.updateMatchState(matchId, "FINISHED");
+
+      await saveResult(matchId,result);
+      await persistFinalResult(matchId , result);
+
+      await redis.expire(`match:result:${matchId}`, 60 * 10);
 
     },
     { connection: redis }

@@ -11,7 +11,7 @@ export function buildTrafficTimeline(
   }
 
   // ramp
-  for (let rps = profile.warmupRps; rps <= profile.rampToRps; rps += 20) {
+  for (let rps = profile.warmupRps; rps <= profile.rampToRps; rps += 40) {
     timeline.push(rps);
   }
 
